@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Fuel Advisor</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Segoe UI', sans-serif;
+      background-color: #121212;
+      color: #e0e0e0;
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+    }
+
+    header, footer {
+      text-align: center;
+      padding: 1.5rem;
+      background-color: #1e1e1e;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+    }
+
+    footer {
+      font-size: 0.9rem;
+      color: #00ff99;
+    }
+
+    main {
+      flex: 1;
+      padding: 2rem;
+      max-width: 900px;
+      margin: auto;
+    }
+
+    h1, h2 {
+      text-align: center;
+      color: #00ff99;
+      transition: color 0.3s ease-in-out;
+    }
+
+    h1:hover, h2:hover {
+      color: #27ae60;
+    }
+
+    .input-section {
+      text-align: center;
+      margin-bottom: 2rem;
+    }
+
+    input[type="number"] {
+      padding: 0.6rem;
+      font-size: 1rem;
+      border-radius: 6px;
+      border: none;
+      width: 200px;
+      margin-right: 1rem;
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    input[type="number"]:focus {
+      transform: scale(1.05);
+      box-shadow: 0 0 10px rgba(0, 255, 153, 0.5);
+      outline: none;
+    }
+
+    button {
+      padding: 0.6rem 1rem;
+      background-color: #2ecc71;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: background-color 0.3s ease, transform 0.2s ease;
+    }
+
+    button:hover {
+      background-color: #27ae60;
+      transform: translateY(-2px);
+    }
+
+    .recommendation {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1.5rem;
+      justify-content: center;
+    }
+
+    .car-card {
+      background-color: #1f1f1f;
+      border-radius: 10px;
+      padding: 1rem;
+      width: 250px;
+      box-shadow: 0 0 10px rgba(0, 255, 100, 0.2);
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    .car-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 0 15px rgba(0, 255, 100, 0.4);
+    }
+
+    .car-card img {
+      max-width: 100%;
+      height: 130px;
+      object-fit: cover;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: opacity 0.3s ease;
+    }
+
+    .car-card img:hover {
+      opacity: 0.9;
+    }
+
+    .car-specs {
+      display: none;
+      margin-top: 1rem;
+      padding: 0.5rem;
+      background-color: #2e2e2e;
+      border-radius: 5px;
+      font-size: 0.9rem;
+      transition: opacity 0.3s ease, max-height 0.5s ease;
+      max-height: 0;
+      overflow: hidden;
+    }
+
+    .car-specs.show {
+      display: block;
+      max-height: 200px;
+      opacity: 1;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Fuel Advisor</h1>
+  </header>
+
+  <main>
+    <div class="input-section">
+      <label for="budget">Enter Your Budget (₹): </label>
+      <input type="number" id="budget" placeholder="e.g. 2500000" />
+      <button onclick="getRecommendation()">Suggest</button>
+    </div>
+
+    <div id="recommendation" class="recommendation"></div>
+  </main>
+
+  <footer>
+    Developed by Rishabh Panchal
+  </footer>
+
+  <script>
+    const cars = {
+      petrol: [
+        { name: "Toyota Urban Cruiser Hyryder Hybrid (petrol/hybrid)", fuel: "hybrid", image: "assets/car-images/hyryder.jpg", specs: "1.5L Hybrid, 25 kmpl, 103 hp" },
+        { name: "Mahindra XUV700 Petrol 2023", fuel: "petrol", image: "assets/car-images/xuv700.jpg", specs: "2.0L Turbo, 13 kmpl, 200 hp" },
+        { name: "Hyundai Creta 2023 Petrol", fuel: "petrol", image: "assets/car-images/creta.jpg", specs: "1.5L NA, 17 kmpl, 115 hp" }
+      ],
+      hybrid: [
+        { name: "Toyota Urban Cruiser Hyryder Hybrid 2023", fuel: "hybrid", image: "assets/car-images/hyryder.jpg", specs: "1.5L Hybrid, 27 kmpl, 115 hp" },
+        { name: "Toyota Innova Hycross Hybrid 2024", fuel: "hybrid", image: "assets/car-images/hycross.jpg", specs: "2.0L Hybrid, 23 kmpl, 186 hp" },
+        { name: "Mahindra Hybrid SUV (expected)", fuel: "hybrid", image: "assets/car-images/mahindra-hybrid.jpg", specs: "2.0L Hybrid, 20 kmpl, 150 hp" }
+      ],
+      ev: [
+        { name: "Tata Nexon EV 2024", fuel: "ev", image: "assets/car-images/nexon-ev.jpg", specs: "40.5 kWh, 325 km range, 129 hp" },
+        { name: "Tata Punch EV 2024", fuel: "ev", image: "assets/car-images/punch-ev.jpg", specs: "25 kWh, 250 km range, 80 hp" },
+        { name: "Tata Curvv EV 2025", fuel: "ev", image: "assets/car-images/curvv-ev.jpg", specs: "55 kWh, 400 km range, 150 hp" },
+        { name: "Mahindra XUV400 EV 2024", fuel: "ev", image: "assets/car-images/xuv400-ev.jpg", specs: "39.4 kWh, 375 km range, 150 hp" },
+        { name: "Mahindra BE.06 EV 2025", fuel: "ev", image: "assets/car-images/be6-ev.jpg", specs: "60 kWh, 450 km range, 170 hp" },
+        { name: "MG ZS EV 2024", fuel: "ev", image: "assets/car-images/zs-ev.jpg", specs: "50.3 kWh, 419 km range, 176 hp" },
+        { name: "MG Windsor EV 2025", fuel: "ev", image: "assets/car-images/windsor-ev.jpg", specs: "38 kWh, 331 km range, 134 hp" },
+        { name: "Tesla Model 3 2024", fuel: "ev", image: "assets/car-images/tesla-model3.jpg", specs: "60 kWh, 500 km range, 283 hp" },
+        { name: "Tesla Model S 2025", fuel: "ev", image: "assets/car-images/tesla-models.jpg", specs: "100 kWh, 650 km range, 670 hp" },
+        { name: "Hyundai Kona Electric 2024", fuel: "ev", image: "assets/car-images/kona-ev.jpg", specs: "39.2 kWh, 305 km range, 136 hp" },
+        { name: "Hyundai Creta Electric 2025", fuel: "ev", image: "assets/car-images/creta-ev.jpg", specs: "50 kWh, 400 km range, 140 hp" }
+      ]
+    };
+
+    function getRecommendation() {
+      const budget = parseInt(document.getElementById("budget").value);
+      const output = document.getElementById("recommendation");
+      output.innerHTML = "";
+
+      if (isNaN(budget) || budget <= 0) {
+        output.innerHTML = "<p>Please enter a valid budget.</p>";
+        return;
+      }
+
+      let fuelType = "";
+      if (budget < 2000000) fuelType = "petrol";
+      else if (budget >= 2000000 && budget <= 3500000) fuelType = "hybrid";
+      else fuelType = "ev";
+
+      output.innerHTML += `<h2>Recommended Fuel Type: ${fuelType.toUpperCase()}</h2>`;
+
+      cars[fuelType].forEach(car => {
+        output.innerHTML += `
+          <div class="car-card">
+            <img src="${car.image}" alt="${car.name}" onclick="toggleSpecs(this)" />
+            <h3>${car.name}</h3>
+            <div class="car-specs">${car.specs}</div>
+          </div>`;
+      });
+    }
+
+    function toggleSpecs(imgElement) {
+      const specsDiv = imgElement.nextElementSibling.nextElementSibling;
+      specsDiv.classList.toggle("show");
+    }
+  </script>
+</body>
+</html>
